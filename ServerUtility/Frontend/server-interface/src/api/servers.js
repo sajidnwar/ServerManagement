@@ -384,3 +384,53 @@ export async function stopServer(id) {
     throw error
   }
 }
+
+// Upload server ZIP file
+export async function uploadServerZip(zipFile) {
+  try {
+    const formData = new FormData()
+    formData.append('zipFile', zipFile)
+    
+    const token = localStorage.getItem('authToken')
+    const headers = {
+      'Access-Control-Allow-Origin': '*'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(`${BASE_URL}/servers/upload-zip`, {
+      method: 'POST',
+      headers,
+      mode: 'cors',
+      body: formData
+    })
+    
+    if (!response.ok) {
+      if (response.status === 0) {
+        throw new Error('Network error: Unable to connect to server.')
+      }
+      
+      try {
+        const errorData = await response.json()
+        throw new Error(errorData.message || `Failed to upload ZIP file: ${response.status} - ${response.statusText}`)
+      } catch (parseError) {
+        throw new Error(`Failed to upload ZIP file: ${response.status} - ${response.statusText}`)
+      }
+    }
+    
+    const result = await response.json()
+    return {
+      success: true,
+      message: result.message || 'ZIP file uploaded successfully',
+      serverName: result.serverName,
+      extractedPath: result.extractedPath
+    }
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('CORS error: Unable to connect to server. Please ensure the backend allows cross-origin requests.')
+    }
+    console.error('Failed to upload ZIP file:', error)
+    throw error
+  }
+}
