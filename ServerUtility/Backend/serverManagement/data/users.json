@@ -1,0 +1,21 @@
+[ {
+  "shortName" : "admin",
+  "fullName" : "System Administrator",
+  "password" : "$2a$10$k3.UvXOj2V.qBDx36D8YN.n7IpKF/h/9OqF5obGlTOQsqAgAiQRSm",
+  "role" : "ADMIN"
+}, {
+  "shortName" : "superadmin",
+  "fullName" : "Super Administrator",
+  "password" : "$2a$10$NB2FY9j49qMip3r/SMSgY.BAssyFRFzr4NX6WjRQEfiu7zViWWpky",
+  "role" : "ADMIN"
+}, {
+  "shortName" : "root",
+  "fullName" : "Root Administrator",
+  "password" : "$2a$10$WoU7LvagV0mYd8bLyw6mL.qc.eKyAlJ3QUPsutfaaD7z04wftU6gq",
+  "role" : "ADMIN"
+}, {
+  "shortName" : "asad",
+  "fullName" : "Asad Alam",
+  "password" : "$2a$10$cRGw7wNqneLwnGBu2kkuJe3ZED2tkgK0zlk36A0c5tM/RRquEjuoi",
+  "role" : "USER"
+} ]
