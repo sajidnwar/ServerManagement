@@ -2,15 +2,22 @@
 
 const BASE_URL = 'http://localhost:8081'
 
+// Helper function to get authentication headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('authToken')
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  }
+}
+
 // Fetch all servers (called when "Show servers" is clicked)
 export async function fetchAllServers() {
   try {
     const response = await fetch(`${BASE_URL}/servers`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors'
     })
     
@@ -54,10 +61,7 @@ export async function fetchServers() {
   try {
     const response = await fetch(`${BASE_URL}/servers/running`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors'
     })
     
@@ -109,10 +113,7 @@ export async function fetchServer(id) {
   try {
     const response = await fetch(`${BASE_URL}/servers`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors'
     })
     
@@ -162,10 +163,7 @@ export async function startServer(serverName) {
     // Call start endpoint
     const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/start`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors'
     })
     
@@ -204,10 +202,7 @@ export async function pollServerStatus(serverName) {
       try {
         const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/status`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          },
+          headers: getAuthHeaders(),
           mode: 'cors'
         })
         
@@ -274,11 +269,17 @@ export async function uploadDeployableFiles(serverName, files, deploymentPath) {
       formData.append('deploymentPath', deploymentPath)
     }
     
+    const token = localStorage.getItem('authToken')
+    const headers = {
+      'Access-Control-Allow-Origin': '*'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
     const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/upload`, {
       method: 'POST',
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers,
       mode: 'cors',
       body: formData
     })
@@ -312,10 +313,7 @@ export async function getServerStatus(serverName) {
   try {
     const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/status`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors'
     })
     
@@ -346,10 +344,7 @@ export async function stopServer(id) {
   try {
     const response = await fetch(`${BASE_URL}/servers/stop`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: getAuthHeaders(),
       mode: 'cors',
       body: JSON.stringify({ id })
     })
