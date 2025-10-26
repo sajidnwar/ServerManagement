@@ -39,6 +39,11 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/**").permitAll()
 
+                // File upload endpoints - authenticated users can access
+                .requestMatchers(HttpMethod.POST, "/api/files/upload").hasAnyRole( "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/files/delete").hasAnyRole( "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/files/info").hasAnyRole("USER", "ADMIN")
+
                 // GET endpoints - all authenticated users can access
                 .requestMatchers(HttpMethod.GET, "/servers/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/servers").hasAnyRole("USER", "ADMIN")
