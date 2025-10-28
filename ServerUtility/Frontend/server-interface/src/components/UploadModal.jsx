@@ -1,12 +1,19 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { uploadDeployableFiles } from '../api/servers'
 
-export default function UploadModal({ isOpen, onClose, serverName, onUploadSuccess }) {
-  const [deploymentPath, setDeploymentPath] = useState('')
+export default function UploadModal({ isOpen, onClose, serverName, deploymentsPath, onUploadSuccess }) {
+  const [deploymentPath, setDeploymentPath] = useState(deploymentsPath || '')
   const [selectedFiles, setSelectedFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
+
+  // Update deployment path when prop changes
+  useEffect(() => {
+    if (deploymentsPath) {
+      setDeploymentPath(deploymentsPath)
+    }
+  }, [deploymentsPath])
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files)
@@ -27,7 +34,7 @@ export default function UploadModal({ isOpen, onClose, serverName, onUploadSucce
     }
 
     if (!deploymentPath.trim()) {
-      setError('Please enter the deployment folder path')
+      setError('Deployment path not available for this server')
       return
     }
 
@@ -97,11 +104,10 @@ export default function UploadModal({ isOpen, onClose, serverName, onUploadSucce
               id="deploymentPath"
               type="text"
               value={deploymentPath}
-              onChange={(e) => setDeploymentPath(e.target.value)}
               placeholder="e.g., /opt/jboss/standalone/deployments"
-              className="form-input"
-              disabled={uploading}
-              required
+              className="form-input disabled"
+              disabled={true}
+              readOnly
             />
           </div>
 

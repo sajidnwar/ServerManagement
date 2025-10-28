@@ -58,6 +58,7 @@ export default function ServerCard({ server, onStart, onStop, onUpload }) {
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         serverName={server.name || server.id}
+        deploymentsPath={server.deploymentsPath}
         onUploadSuccess={handleUploadSuccess}
       />
     </>

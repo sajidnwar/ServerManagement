@@ -414,7 +414,7 @@ public class ServerControlService {
     /**
      * Find the standalone directory that contains deployments folder
      */
-    private File findStandaloneDirectory(String serverPath) {
+    public File findStandaloneDirectory(String serverPath) {
 
         File serverDir = new File(serverPath);
         if (!serverDir.exists()) {

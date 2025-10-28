@@ -46,7 +46,8 @@ export async function fetchAllServers() {
       state: server.running ? 'running' : 'stopped',
       uptime: server.running ? 3600 : 0, // Default uptime for running servers
       pid: server.pid,
-      path: server.path
+      path: server.path,
+      deploymentsPath: server.deployments_path || '' // Include deployment path from API
     }))
   } catch (error) {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -98,7 +99,8 @@ export async function fetchServers() {
       state: data.running ? 'running' : 'stopped',
       uptime: data.running ? 3600 : 0, // Default uptime for running servers
       pid: data.pid,
-      path: data.path
+      path: data.path,
+      deploymentsPath: data.deployments_path || '' // Include deployment path from API
     }]
   } catch (error) {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -145,7 +147,8 @@ export async function fetchServer(id) {
         state: serverData.running ? 'running' : 'stopped',
         uptime: serverData.running ? 3600 : 0,
         pid: serverData.pid,
-        path: serverData.path
+        path: serverData.path,
+        deploymentsPath: serverData.deployments_path || '' // Include deployment path from API
       }
     }
     return null
