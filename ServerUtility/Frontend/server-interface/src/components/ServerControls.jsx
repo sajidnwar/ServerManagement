@@ -1,28 +1,29 @@
 import { useState } from 'react'
 import { useServerOperations, useServerUI } from '../hooks/useServer'
 import UploadZipModal from './UploadZipModal'
-import { uploadServerZip } from '../api/servers'
 
 export default function ServerControls() {
   const { loadSummary, toggleServerList } = useServerOperations()
   const { visible, isTransitioning } = useServerUI()
   const [showUploadModal, setShowUploadModal] = useState(false)
 
-  const handleUploadZip = async (zipFile) => {
+  const handleUploadZip = async (result) => {
     try {
-      const result = await uploadServerZip(zipFile)
-      
-      // Show success message or refresh server list
-      console.log('ZIP uploaded successfully:', result)
-      
-      // Optionally refresh the server summary after upload
-      setTimeout(() => {
-        loadSummary()
-      }, 1000)
-      
-      return result
+      if (result.success) {
+        console.log('ZIP uploaded and extracted successfully:', {
+          fileName: result.fileName,
+          extractionPath: result.extractionPath
+        })
+        
+        // Refresh the server summary after successful upload
+        setTimeout(() => {
+          loadSummary()
+        }, 1000)
+        
+        return result
+      }
     } catch (error) {
-      console.error('Upload failed:', error)
+      console.error('Upload processing failed:', error)
       throw error
     }
   }

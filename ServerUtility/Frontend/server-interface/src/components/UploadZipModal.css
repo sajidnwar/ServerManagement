@@ -222,6 +222,8 @@
   color: #6b7280;
   font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1.4;
+  min-height: 1.2rem;
 }
 
 .upload-modal-footer {

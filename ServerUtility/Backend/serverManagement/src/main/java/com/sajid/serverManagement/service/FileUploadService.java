@@ -11,8 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class FileUploadService {
@@ -23,30 +21,97 @@ public class FileUploadService {
     private String basePath;
 
     private static final String[] ALLOWED_EXTENSIONS = {".zip"};
-    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024 * 1024; // 5GB
+    private static final String SERVER_ZIP_FOLDER = "ServerZip";
 
     public String uploadZipFile(MultipartFile file) throws IOException {
         validateFile(file);
 
-        // Create upload directory if it doesn't exist
-        Path uploadPath = Paths.get(basePath);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-            logger.info("Created upload directory: {}", uploadPath);
+        // Create ServerZip directory inside base path if it doesn't exist
+        Path basePathDir = Paths.get(basePath);
+        Path serverZipPath = basePathDir.resolve(SERVER_ZIP_FOLDER);
+
+        if (!Files.exists(serverZipPath)) {
+            Files.createDirectories(serverZipPath);
+            logger.info("Created ServerZip directory: {}", serverZipPath);
         }
 
-        // Generate unique filename with timestamp
+        // Use original filename without timestamp
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = getFileExtension(originalFilename);
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String filename = removeFileExtension(originalFilename) + "_" + timestamp + fileExtension;
 
-        // Save the file
-        Path filePath = uploadPath.resolve(filename);
+        // Save the file inside ServerZip folder with original name
+        Path filePath = serverZipPath.resolve(originalFilename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        logger.info("Successfully uploaded file: {} to path: {}", filename, filePath);
+        logger.info("Successfully uploaded file: {} to path: {}", originalFilename, filePath);
         return filePath.toString();
+    }
+
+    public String uploadAndExtractZipFile(MultipartFile file) throws IOException {
+        // First upload the file
+        String uploadedFilePath = uploadZipFile(file);
+
+        // Then extract it
+        String extractionPath = extractZipFile(uploadedFilePath);
+
+        return extractionPath;
+    }
+
+    public String extractZipFile(String zipFilePath) throws IOException {
+        Path zipPath = Paths.get(zipFilePath);
+
+        if (!Files.exists(zipPath)) {
+            throw new IOException("ZIP file not found: " + zipFilePath);
+        }
+
+        // Create extraction directory (same name as zip file without extension)
+        String fileName = zipPath.getFileName().toString();
+        String folderName = fileName.substring(0, fileName.lastIndexOf('.'));
+        Path extractionDir = zipPath.getParent().resolve(folderName);
+
+        if (!Files.exists(extractionDir)) {
+            Files.createDirectories(extractionDir);
+            logger.info("Created extraction directory: {}", extractionDir);
+        }
+
+        // Extract the ZIP file
+        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.FileInputStream(zipPath.toFile()))) {
+            java.util.zip.ZipEntry zipEntry = zis.getNextEntry();
+
+            while (zipEntry != null) {
+                Path newPath = extractionDir.resolve(zipEntry.getName());
+
+                // Security check to prevent zip slip attacks
+                if (!newPath.normalize().startsWith(extractionDir.normalize())) {
+                    throw new IOException("Bad zip entry: " + zipEntry.getName());
+                }
+
+                if (zipEntry.isDirectory()) {
+                    Files.createDirectories(newPath);
+                } else {
+                    // Create parent directories if they don't exist
+                    if (newPath.getParent() != null) {
+                        Files.createDirectories(newPath.getParent());
+                    }
+
+                    // Extract file
+                    try (java.io.BufferedOutputStream bos = new java.io.BufferedOutputStream(new java.io.FileOutputStream(newPath.toFile()))) {
+                        byte[] buffer = new byte[8192]; // Optimized buffer size for large files
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            bos.write(buffer, 0, len);
+                        }
+                    }
+                }
+
+                zipEntry = zis.getNextEntry();
+            }
+
+            zis.closeEntry();
+        }
+
+        logger.info("Successfully extracted ZIP file: {} to directory: {}", zipFilePath, extractionDir);
+        return extractionDir.toString();
     }
 
     private void validateFile(MultipartFile file) {
@@ -55,7 +120,7 @@ public class FileUploadService {
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size exceeds maximum allowed size of " + (MAX_FILE_SIZE / 1024 / 1024) + "MB");
+            throw new IllegalArgumentException("File size exceeds maximum allowed size of " + (MAX_FILE_SIZE / 1024 / 1024 / 1024) + "GB");
         }
 
         String filename = file.getOriginalFilename();
@@ -82,13 +147,6 @@ public class FileUploadService {
             return "";
         }
         return filename.substring(filename.lastIndexOf('.'));
-    }
-
-    private String removeFileExtension(String filename) {
-        if (filename == null || filename.lastIndexOf('.') == -1) {
-            return filename;
-        }
-        return filename.substring(0, filename.lastIndexOf('.'));
     }
 
     public boolean deleteFile(String filePath) {

@@ -39,9 +39,14 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/**").permitAll()
 
-                // File upload endpoints - authenticated users can access
-                .requestMatchers(HttpMethod.POST, "/api/files/upload").hasAnyRole( "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/files/delete").hasAnyRole( "ADMIN")
+                // File upload and extraction endpoints - ADMIN only
+                .requestMatchers(HttpMethod.POST, "/api/files/upload").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/files/upload-and-extract").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/files/extract").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/files/extract-async").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/files/extraction-status/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/files/extraction-status/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/files/delete").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/files/info").hasAnyRole("USER", "ADMIN")
 
                 // GET endpoints - all authenticated users can access

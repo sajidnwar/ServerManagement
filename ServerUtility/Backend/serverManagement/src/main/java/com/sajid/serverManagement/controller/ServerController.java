@@ -120,7 +120,7 @@ public class ServerController {
     }
 
     @GetMapping("/running")
-    public ServerInfo getRunningServer() {
+    public ResponseEntity<Map<String, Object>> getRunningServer() {
         // Get the PID of the process using port 8080 (if any)
         Long activePid = status.getProcessIdUsingPort(8080);
 
@@ -188,13 +188,71 @@ public class ServerController {
             }
         }
 
-        // If we found a match, return the running server info
-        if (activeServerName != null) {
-            return new ServerInfo(activeServerName, activeProcessPath, true, 8080, activePid);
+        // Build detailed response with deployments folder path
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        // Basic server information
+        response.put("name", activeServerName != null ? activeServerName : "Unknown Server");
+        response.put("path", activeProcessPath != null ? activeProcessPath : "Unknown Path");
+        response.put("running", true);
+        response.put("port", 8080);
+        response.put("pid", activePid);
+
+        // Add deployments folder path
+        String deploymentsPath = null;
+        if (activeProcessPath != null) {
+            File activeDir = new File(activeProcessPath);
+
+            // Look for jboss* folder in the activeProcessPath
+            File[] subDirs = activeDir.listFiles(File::isDirectory);
+            if (subDirs != null) {
+                for (File subDir : subDirs) {
+                    // Check if directory name starts with "jboss"
+                    if (subDir.getName().toLowerCase().startsWith("jboss")) {
+                        // Check for standalone/deployments inside jboss* folder
+                        File standaloneDir = new File(subDir, "standalone");
+                        if (standaloneDir.exists() && standaloneDir.isDirectory()) {
+                            File deploymentsDir = new File(standaloneDir, "deployments");
+                            if (deploymentsDir.exists() && deploymentsDir.isDirectory()) {
+                                deploymentsPath = deploymentsDir.getAbsolutePath();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If still not found, fallback to original logic for other server types
+            if (deploymentsPath == null) {
+                File serverDir = new File(activeProcessPath);
+
+                // Common deployment folder locations for other application servers
+                String[] deploymentFolders = {
+                        "standalone/deployments",  // Direct standalone/deployments
+                        "deployments",             // Direct deployments folder
+                        "webapps",                 // Tomcat
+                        "autodeploy",              // GlassFish
+                        "deploy"                   // Generic deploy folder
+                };
+
+                for (String deployFolder : deploymentFolders) {
+                    File deployDir = new File(serverDir, deployFolder);
+                    if (deployDir.exists() && deployDir.isDirectory()) {
+                        deploymentsPath = deployDir.getAbsolutePath();
+                        break;
+                    }
+                }
+            }
         }
 
-        // If no match found but process exists, return generic info
-        return new ServerInfo("Unknown Server", activeProcessPath != null ? activeProcessPath : "Unknown Path", true, 8080, activePid);
+        response.put("deployments_path", deploymentsPath);
+        response.put("deployments_found", deploymentsPath != null);
+
+        // Add additional process information
+        response.put("command_line", status.getProcessCommandLine(activePid));
+        response.put("working_directory", status.getProcessWorkingDirectory(activePid));
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{port}/stop")

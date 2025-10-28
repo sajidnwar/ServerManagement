@@ -1,13 +1,17 @@
 import { useState, useRef } from 'react'
+import { useAuth } from '../context/AuthContext'
+import ZipUploadManager from '../utils/ZipUploadManager'
 import './UploadZipModal.css'
 
 const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [progressMessage, setProgressMessage] = useState('')
   const [error, setError] = useState('')
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef(null)
+  const { getToken } = useAuth()
 
   if (!isOpen) return null
 
@@ -22,6 +26,7 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
       setSelectedFile(null)
       setError('')
       setUploadProgress(0)
+      setProgressMessage('')
       onClose()
     }
   }
@@ -48,10 +53,10 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
       return false
     }
 
-    // Check file size (max 500MB)
-    const maxSize = 500 * 1024 * 1024 // 500MB in bytes
+    // Check file size (max 5GB)
+    const maxSize = 5 * 1024 * 1024 * 1024 // 5GB in bytes
     if (file.size > maxSize) {
-      setError('File size must be less than 500MB')
+      setError('File size must be less than 5GB')
       return false
     }
 
@@ -113,37 +118,61 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
 
     setIsUploading(true)
     setUploadProgress(0)
+    setProgressMessage('')
     setError('')
 
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return prev
+      const token = getToken()
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.')
+      }
+
+      const zipManager = new ZipUploadManager(token)
+
+      await zipManager.uploadAndExtractLarge(
+        selectedFile,
+        // onProgress callback
+        (progress, message) => {
+          setUploadProgress(progress)
+          setProgressMessage(message)
+        },
+        // onComplete callback
+        (extractionPath) => {
+          setUploadProgress(100)
+          setProgressMessage('Upload and extraction completed!')
+          setIsUploading(false) // Reset uploading state
+          
+          // Call the parent onUpload callback with success info
+          if (onUpload) {
+            onUpload({
+              success: true,
+              extractionPath,
+              fileName: selectedFile.name
+            })
           }
-          return prev + Math.random() * 15
-        })
-      }, 200)
-
-      // Call the upload function passed from parent
-      const result = await onUpload(selectedFile)
-      
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-
-      // Close modal after successful upload
-      setTimeout(() => {
-        handleClose()
-      }, 1000)
+          
+          // Close modal after successful completion
+          setTimeout(() => {
+            handleClose()
+          }, 2000)
+        },
+        // onError callback
+        (errorMessage) => {
+          setError(errorMessage)
+          setUploadProgress(0)
+          setProgressMessage('')
+          setIsUploading(false)
+        }
+      )
 
     } catch (error) {
       setError(error.message || 'Upload failed. Please try again.')
       setUploadProgress(0)
-    } finally {
-      setIsUploading(false)
+      setProgressMessage('')
+      setIsUploading(false) // Reset uploading state on error
     }
+    // Note: setIsUploading(false) is handled in onComplete/onError callbacks
+    // to prevent premature state reset during async monitoring
   }
 
   const openFileDialog = () => {
@@ -200,7 +229,7 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
                 <div className="upload-icon">📁</div>
                 <h4>Drop your ZIP file here</h4>
                 <p>or <span className="upload-browse-text">browse files</span></p>
-                <small>Supports ZIP files up to 500MB</small>
+                <small>Supports ZIP files up to 5GB</small>
               </div>
             ) : (
               <div className="upload-file-info">
@@ -235,7 +264,7 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
                 ></div>
               </div>
               <div className="upload-progress-text">
-                Uploading... {Math.round(uploadProgress)}%
+                {Math.round(uploadProgress)}% - {progressMessage || 'Processing...'}
               </div>
             </div>
           )}
@@ -247,14 +276,14 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
             onClick={handleClose}
             disabled={isUploading}
           >
-            {isUploading ? 'Uploading...' : 'Cancel'}
+            {isUploading ? 'Processing...' : 'Cancel'}
           </button>
           <button 
             className="upload-modal-button upload-confirm"
             onClick={handleUpload}
             disabled={!selectedFile || isUploading}
           >
-            {isUploading ? 'Uploading...' : 'Upload ZIP'}
+            {isUploading ? 'Processing...' : 'Upload & Extract'}
           </button>
         </div>
       </div>
