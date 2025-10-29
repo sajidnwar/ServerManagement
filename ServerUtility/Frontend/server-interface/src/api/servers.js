@@ -1,21 +1,17 @@
 // API for server management. Connects to backend that manages server instances.
 
-const BASE_URL = 'http://localhost:8081'
-
-// Helper function to get authentication headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken')
-  return {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    ...(token && { 'Authorization': `Bearer ${token}` })
-  }
-}
+import { 
+  API_CONFIG, 
+  ENDPOINTS, 
+  buildUrl, 
+  buildUploadUrl, 
+  getAuthHeaders 
+} from '../config/api.js'
 
 // Fetch all servers (called when "Show servers" is clicked)
 export async function fetchAllServers() {
   try {
-    const response = await fetch(`${BASE_URL}/servers`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.LIST), {
       method: 'GET',
       headers: getAuthHeaders(),
       mode: 'cors'
@@ -60,7 +56,7 @@ export async function fetchAllServers() {
 
 export async function fetchServers() {
   try {
-    const response = await fetch(`${BASE_URL}/servers/running`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.RUNNING), {
       method: 'GET',
       headers: getAuthHeaders(),
       mode: 'cors'
@@ -113,7 +109,7 @@ export async function fetchServers() {
 
 export async function fetchServer(id) {
   try {
-    const response = await fetch(`${BASE_URL}/servers`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.LIST), {
       method: 'GET',
       headers: getAuthHeaders(),
       mode: 'cors'
@@ -164,7 +160,7 @@ export async function fetchServer(id) {
 export async function startServer(serverName) {
   try {
     // Call start endpoint
-    const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/start`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.START(serverName)), {
       method: 'POST',
       headers: getAuthHeaders(),
       mode: 'cors'
@@ -203,7 +199,7 @@ export async function pollServerStatus(serverName) {
   return new Promise((resolve, reject) => {
     const checkStatus = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/status`, {
+        const response = await fetch(buildUrl(ENDPOINTS.SERVERS.STATUS(serverName)), {
           method: 'GET',
           headers: getAuthHeaders(),
           mode: 'cors'
@@ -288,7 +284,7 @@ export async function uploadDeployableFiles(serverName, files, deploymentPath) {
       headers['Authorization'] = `Bearer ${token}`
     }
     
-    const response = await fetch('http://localhost:8080/tmpFileUpload', {
+    const response = await fetch(buildUploadUrl(ENDPOINTS.UPLOAD.TEMP_FILE), {
       method: 'POST',
       headers,
       mode: 'cors',
@@ -322,7 +318,7 @@ export async function uploadDeployableFiles(serverName, files, deploymentPath) {
 // Get server status
 export async function getServerStatus(serverName) {
   try {
-    const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/status`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.STATUS(serverName)), {
       method: 'GET',
       headers: getAuthHeaders(),
       mode: 'cors'
@@ -353,7 +349,7 @@ export async function getServerStatus(serverName) {
 
 export async function stopServer(id) {
   try {
-    const response = await fetch(`${BASE_URL}/servers/stop`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.STOP), {
       method: 'POST',
       headers: getAuthHeaders(),
       mode: 'cors',
@@ -410,7 +406,7 @@ export async function uploadServerZip(zipFile) {
       headers['Authorization'] = `Bearer ${token}`
     }
     
-    const response = await fetch(`${BASE_URL}/servers/upload-zip`, {
+    const response = await fetch(buildUrl(ENDPOINTS.SERVERS.UPLOAD_ZIP), {
       method: 'POST',
       headers,
       mode: 'cors',

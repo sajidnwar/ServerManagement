@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { buildUrl, ENDPOINTS, getDefaultHeaders } from '../config/api.js'
 
 const AuthContext = createContext()
 
@@ -49,11 +50,9 @@ export const AuthProvider = ({ children }) => {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/login', {
+      const response = await fetch(buildUrl(ENDPOINTS.AUTH.LOGIN), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getDefaultHeaders(),
         body: JSON.stringify({ shortName, password }),
       })
 
@@ -91,11 +90,9 @@ export const AuthProvider = ({ children }) => {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/register', {
+      const response = await fetch(buildUrl(ENDPOINTS.AUTH.REGISTER), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getDefaultHeaders(),
         body: JSON.stringify({ shortName, fullName, password }),
       })
 

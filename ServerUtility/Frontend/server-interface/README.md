@@ -1,6 +1,59 @@
-# React + Vite
+# Server Interface Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend application for managing JBoss/Java servers with authentication and file upload capabilities.
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment configuration
+cp .env.example .env
+
+# Start development server
+npm run dev
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+The application uses environment variables for configuration. Copy `.env.example` to `.env` and customize the values:
+
+```bash
+# Main API Server
+VITE_API_BASE_URL=http://localhost:8081
+
+# Upload Service (can be same as API or different microservice)
+VITE_UPLOAD_URL=http://localhost:8081
+
+# Request Configuration
+VITE_REQUEST_TIMEOUT=30000
+VITE_POLL_INTERVAL=5000
+```
+
+### API Configuration
+
+All API configurations are centralized in `src/config/api.js`:
+
+- **API_CONFIG**: Base URLs and timeout settings
+- **ENDPOINTS**: All API endpoint definitions
+- **Helper Functions**: URL builders and header factories
+
+### Usage Example
+
+```javascript
+import { buildUrl, ENDPOINTS, getAuthHeaders } from '../config/api.js'
+
+// Build API URL
+const url = buildUrl(ENDPOINTS.SERVERS.LIST)
+
+// Get authenticated headers
+const headers = getAuthHeaders()
+```
+
+## 🏗️ Architecture
 
 Currently, two official plugins are available:
 
