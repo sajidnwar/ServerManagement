@@ -37,7 +37,7 @@ public class SecurityConfig {
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**","/api/jdks", "/tmpFileUpload").permitAll()
 
                 // File upload and extraction endpoints - ADMIN only
                 .requestMatchers(HttpMethod.POST, "/api/files/upload").hasRole("ADMIN")

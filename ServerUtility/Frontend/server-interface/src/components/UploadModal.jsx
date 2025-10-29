@@ -29,7 +29,7 @@ export default function UploadModal({ isOpen, onClose, serverName, deploymentsPa
     e.preventDefault()
     
     if (selectedFiles.length === 0) {
-      setError('Please select at least one file to upload')
+      setError('Please select a file to upload')
       return
     }
 
@@ -117,7 +117,6 @@ export default function UploadModal({ isOpen, onClose, serverName, deploymentsPa
               <input
                 ref={fileInputRef}
                 type="file"
-                multiple
                 accept=".war,.jar"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
@@ -129,20 +128,18 @@ export default function UploadModal({ isOpen, onClose, serverName, deploymentsPa
                 className="btn file-choose-btn"
                 disabled={uploading}
               >
-                Choose Files
+                Choose File
               </button>
               <div className="selected-files">
                 {selectedFiles.length > 0 ? (
                   <div>
-                    <strong>{selectedFiles.length} file(s) selected:</strong>
-                    <ul>
-                      {selectedFiles.map((file, index) => (
-                        <li key={index}>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</li>
-                      ))}
-                    </ul>
+                    <strong>Selected file:</strong>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      {selectedFiles[0].name} ({(selectedFiles[0].size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
                   </div>
                 ) : (
-                  <span className="no-files">No files selected</span>
+                  <span className="no-files">No file selected</span>
                 )}
               </div>
             </div>

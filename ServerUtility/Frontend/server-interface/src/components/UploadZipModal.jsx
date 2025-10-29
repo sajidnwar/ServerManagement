@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import ZipUploadManager from '../utils/ZipUploadManager'
 import './UploadZipModal.css'
@@ -10,8 +10,52 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
   const [progressMessage, setProgressMessage] = useState('')
   const [error, setError] = useState('')
   const [dragActive, setDragActive] = useState(false)
+  const [jdkVersions, setJdkVersions] = useState([])
+  const [loadingJdks, setLoadingJdks] = useState(false)
+  const [jdkError, setJdkError] = useState('')
   const fileInputRef = useRef(null)
   const { getToken } = useAuth()
+
+  // Fetch JDK versions when modal opens
+  useEffect(() => {
+    if (isOpen && jdkVersions.length === 0) {
+      fetchJdkVersions()
+    }
+  }, [isOpen])
+
+  const fetchJdkVersions = async () => {
+    setLoadingJdks(true)
+    setJdkError('')
+    
+    try {
+      const token = getToken()
+      const headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch('http://localhost:8081/api/jdks', {
+        method: 'GET',
+        headers,
+        mode: 'cors'
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch JDK versions: ${response.status} - ${response.statusText}`)
+      }
+
+      const versions = await response.json()
+      setJdkVersions(Array.isArray(versions) ? versions : [])
+    } catch (error) {
+      console.error('Failed to fetch JDK versions:', error)
+      setJdkError('Failed to load JDK versions from server')
+    } finally {
+      setLoadingJdks(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -27,6 +71,8 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
       setError('')
       setUploadProgress(0)
       setProgressMessage('')
+      setJdkVersions([])
+      setJdkError('')
       onClose()
     }
   }
@@ -206,6 +252,42 @@ const UploadZipModal = ({ isOpen, onClose, onUpload }) => {
               {error}
             </div>
           )}
+
+          {/* JDK Versions Section */}
+          <div className="jdk-versions-section">
+            <h4 className="jdk-section-title">Available JDK Versions on Server</h4>
+            
+            {loadingJdks ? (
+              <div className="jdk-loading">
+                <span className="loading-spinner">⟳</span> Loading JDK versions...
+              </div>
+            ) : jdkError ? (
+              <div className="jdk-error">
+                ⚠️ {jdkError}
+              </div>
+            ) : jdkVersions.length > 0 ? (
+              <>
+                <div className="jdk-versions-list">
+                  {jdkVersions.map((version, index) => (
+                    <span key={index} className="jdk-version-badge">
+                      {version}
+                    </span>
+                  ))}
+                </div>
+                <div className="jdk-warning-message">
+                  <div className="warning-icon">⚠️</div>
+                  <div className="warning-text">
+                    <strong>Important:</strong> These JDK versions are available on the server. 
+                    If your ZIP file requires a different JDK version, the server may not start properly.
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="jdk-no-versions">
+                No JDK versions information available
+              </div>
+            )}
+          </div>
 
           <div 
             className={`upload-drop-zone ${dragActive ? 'drag-active' : ''} ${selectedFile ? 'has-file' : ''}`}

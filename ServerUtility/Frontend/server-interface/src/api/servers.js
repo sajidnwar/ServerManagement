@@ -262,15 +262,23 @@ export async function uploadDeployableFiles(serverName, files, deploymentPath) {
   try {
     const formData = new FormData()
     
-    // Add all selected files to FormData
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i])
+    // Add files to FormData - upload one file at a time for this API
+    const file = files[0] // Take the first file for single file upload
+    if (!file) {
+      throw new Error('No file selected for upload')
     }
     
-    // Add deployment path to FormData
-    if (deploymentPath) {
-      formData.append('deploymentPath', deploymentPath)
+    formData.append('tmpFile', file)
+    
+    // Create DeployFileDTO object
+    const deployFileDTO = {
+      deploymentPath: deploymentPath
     }
+    
+    // Add deploy info as JSON blob
+    formData.append('deployInfo', new Blob([JSON.stringify(deployFileDTO)], {
+      type: 'application/json'
+    }))
     
     const token = localStorage.getItem('authToken')
     const headers = {
@@ -280,7 +288,7 @@ export async function uploadDeployableFiles(serverName, files, deploymentPath) {
       headers['Authorization'] = `Bearer ${token}`
     }
     
-    const response = await fetch(`${BASE_URL}/servers/${encodeURIComponent(serverName)}/upload`, {
+    const response = await fetch('http://localhost:8080/tmpFileUpload', {
       method: 'POST',
       headers,
       mode: 'cors',

@@ -1,31 +1,16 @@
 [ {
   "shortName" : "admin",
   "fullName" : "System Administrator",
-  "password" : "$2a$10$k3.UvXOj2V.qBDx36D8YN.n7IpKF/h/9OqF5obGlTOQsqAgAiQRSm",
+  "password" : "$2a$10$Y5VJtJrR0Z5UIKsUm0nyMePk61/zF3Xnd.Cf6etVO4JexxLc8q2fO",
   "role" : "ADMIN"
 }, {
   "shortName" : "superadmin",
   "fullName" : "Super Administrator",
-  "password" : "$2a$10$NB2FY9j49qMip3r/SMSgY.BAssyFRFzr4NX6WjRQEfiu7zViWWpky",
+  "password" : "$2a$10$Mi91UG.BF6i0kB0gjWIhYeEHeXhLkaJ9bHRgTKIY9AhxK6HGW4rwa",
   "role" : "ADMIN"
 }, {
   "shortName" : "root",
   "fullName" : "Root Administrator",
-  "password" : "$2a$10$WoU7LvagV0mYd8bLyw6mL.qc.eKyAlJ3QUPsutfaaD7z04wftU6gq",
+  "password" : "$2a$10$40q7SD78H8w0rWCE2OJdOOHG92qA76VQZDUTSlzqrPMcbralMrUqe",
   "role" : "ADMIN"
-}, {
-  "shortName" : "asad",
-  "fullName" : "Asad Alam",
-  "password" : "$2a$10$cRGw7wNqneLwnGBu2kkuJe3ZED2tkgK0zlk36A0c5tM/RRquEjuoi",
-  "role" : "USER"
-}, {
-  "shortName" : "Asad ",
-  "fullName" : "Asad Alam",
-  "password" : "$2a$10$4XZisKbvGD/2D9YUEL/sDeaKpW2L8jAtanaFZcsGKnfGZDeiMjvTm",
-  "role" : "USER"
-}, {
-  "shortName" : "meghal",
-  "fullName" : "Meghal Singhal",
-  "password" : "$2a$10$SjSXLwvrYZ5uZDpu29b5N.twqD2bKnp0ylVxGka6SbavEqgWWQD46",
-  "role" : "USER"
 } ]
